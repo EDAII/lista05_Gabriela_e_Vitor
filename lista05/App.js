@@ -93,7 +93,6 @@ export default class App extends Component{
 
 
   addToList(){
-    console.log('entrouuuuu')
     let a = new Date(this.state.newTaskTime)
     a.setTime(a.getTime() + this.state.duration * 60 * 60 * 1000);
     task = {
@@ -111,9 +110,7 @@ export default class App extends Component{
     aux2 = aux2 + 1
     aux.push(task)
     this.setState({taskList: aux, newTaskName: '', index: aux2,duration: ''})
-    console.log('-----------')
-    console.log(task.endTime);
-    console.log('-----------')
+    (task.endTime);
   }
 
   generateSchedule(){
