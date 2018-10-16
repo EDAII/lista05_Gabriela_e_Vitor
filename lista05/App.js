@@ -20,7 +20,9 @@ export default class App extends Component{
       newTaskName:"",
       newTaskTime:{},
       taskList:[],
-      duration: ''
+      duration: '',
+      items: {},
+      index: 0
     }
   }
 /// Start Time:
@@ -73,24 +75,75 @@ export default class App extends Component{
     let dateString =  day.toString().padStart(2, 0)+ '/' +month.toString().padStart(2, 0) +'/'+year.toString() ;
     return dateString;
   }
+  arraytoObject(){
+    const newObj = this.state.taskList.reduce((acc, cur) => {
+      var date = new Date();
+      var format = (date.getFullYear() + '-' +
+        (date.getMonth() + 1).toString().padStart(2, 0) + '-' +
+        (date.getDate()).toString().padStart(2, 0));
+
+      if (!acc[format]) {
+        acc[format] = [];
+      }
+      acc[format].push(cur);
+      return acc;
+    }, {});
+    this.setState({items: newObj});
+  }
+
 
   addToList(){
     console.log('entrouuuuu')
+    let a = new Date(this.state.newTaskTime)
+    a.setTime(a.getTime() + this.state.duration * 60 * 60 * 1000);
     task = {
       name: this.state.newTaskName,
-      dia: this.formatDia(),
-      day: this.formatDate(),
+      day : a.getDay(),
       time: this.formatTime(this.state.newTaskTime),
       date: this.state.newTaskTime,
-      duration: this.state.duration
+      duration: this.state.duration,
+      startTime: new Date(this.state.newTaskTime),
+      endTime: a,
+      index: this.state.index
     }
     let aux = this.state.taskList
+    let aux2 = this.state.index
+    aux2 = aux2 + 1
     aux.push(task)
-    this.setState({taskList: aux, newTaskName: ''})
+    this.setState({taskList: aux, newTaskName: '', index: aux2,duration: ''})
     console.log('-----------')
-    console.log(task);
+    console.log(task.endTime);
     console.log('-----------')
   }
+
+  generateSchedule(){
+    let aux = this.state.taskList
+    aux.sort(function (a, b) {
+      if (a.endTime > b.endTime) {
+        return 1;
+      }
+      if (a.endTime < b.endTime) {
+        return -1;
+      }
+      return 0;
+    });
+    this.setState({taskList: aux});
+    return this.finalSchedule()
+}
+
+finalSchedule(){
+    let finalTasks = []
+    let aux = this.state.taskList
+    finalTasks.push(aux[0]);
+    let j = 0 
+    for(var i = 1; i<aux.length; i++){
+      if(aux[i].startTime >= finalTasks[j]){
+        finalTasks.push(aux[i]);
+        j++
+      }
+    }
+    this.setState({taskList: finalTasks});
+}
 
   render() {
     return (
@@ -98,12 +151,12 @@ export default class App extends Component{
         <Text>Welcome to React Native!</Text>
         <FlatList
           data={this.state.taskList}
-          keyExtractor = {(index) => index.toString()}
+          keyExtractor = {(item) => item.index.toString()}
           extraData = {this.state}
           renderItem={({item}) => (
               <View style={{backgroundColor: 'grey'}}>
                 <Text>{item.name}</Text>
-                <Text>Data: {item.dia} Hora:{item.time}- Duração: {item.duration}</Text>
+                <Text>Hora:{item.time}- Duração: {item.duration}</Text>
               </View>
           )}/>
         <TextInput
@@ -122,7 +175,7 @@ export default class App extends Component{
           <Button rounded onPress = {() => {this._showDateTimePicker()}} style = {styles.button}>
             <Text style={{color:"#FFF"}}> Adicionar nova tarefa </Text>
           </Button>
-          <Button rounded onPress = {() => {}} style = {[styles.button, {backgroundColor: 'gray'}]}>
+          <Button rounded onPress = {() => this.generateSchedule()} style = {[styles.button, {backgroundColor: 'gray'}]}>
             <Text style={{color:"#FFF"}}> Gerar agenda </Text>
           </Button>
         </View>
@@ -130,7 +183,7 @@ export default class App extends Component{
           isVisible={this.state.isVisible}
           onCancel = {this._hideDateTimePicker}
           onConfirm = {this._handleDatePicked}
-          mode = 'datetime'
+          mode = 'time'
         />
       </View>
     );
